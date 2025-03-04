@@ -63,7 +63,7 @@ class _BookingScreenState extends State<BookingScreen> {
       String checkIn = "${_selectedCheckIn!.year}-${_selectedCheckIn!.month.toString().padLeft(2, '0')}-${_selectedCheckIn!.day.toString().padLeft(2, '0')}";
       String checkOut = "${_selectedCheckOut!.year}-${_selectedCheckOut!.month.toString().padLeft(2, '0')}-${_selectedCheckOut!.day.toString().padLeft(2, '0')}";
 
-      String url = "http://localhost:3000/checkAvailability?checkIn=$checkIn&checkOut=$checkOut&apartment=$_selectedApartment";
+      String url = "https://casa-nei-fiori.onrender.com/checkAvailability?checkIn=$checkIn&checkOut=$checkOut&apartment=$_selectedApartment";
 
       try {
         final response = await http.get(Uri.parse(url));

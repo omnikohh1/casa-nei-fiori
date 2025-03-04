@@ -1,4 +1,4 @@
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-core");
 const express = require("express");
 const cors = require("cors");
 
@@ -19,17 +19,20 @@ app.get("/checkAvailability", async (req, res) => {
 
         const browser = await puppeteer.launch({
             headless: true,
-            args: ["--disable-cache", "--disable-application-cache", "--disk-cache-size=0"],
+            args: [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu"
+            ],
+            executablePath: process.env.CHROME_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
         });
-        const page = await browser.newPage();
-        await page.setCacheEnabled(false);
 
+        const page = await browser.newPage();
         await page.goto(url, { waitUntil: "networkidle2", timeout: 90000 });
 
-        // Aspetta qualche secondo per il caricamento
         await new Promise(resolve => setTimeout(resolve, 5000));
 
-        // Estrai tutti i nomi delle strutture disponibili
         const availableRooms = await page.evaluate(() => {
             const roomElements = document.querySelectorAll(".mphb-room-type-title a");
             return Array.from(roomElements).map(el => el.innerText.trim());
@@ -39,12 +42,11 @@ app.get("/checkAvailability", async (req, res) => {
 
         console.log(`🏨 Strutture disponibili: ${availableRooms.length > 0 ? availableRooms.join(", ") : "Nessuna"}`);
 
-        // Controlliamo se l'appartamento richiesto è tra quelli disponibili
         const isAvailable = availableRooms.some(room => room.toLowerCase().includes(apartment.toLowerCase()));
 
         console.log(`✅ Risultato: ${isAvailable ? "DISPONIBILE" : "NON DISPONIBILE"}`);
 
-        res.json({ available: isAvailable, availableRooms });
+        res.json({ available: isAvailable });
     } catch (error) {
         console.error("❌ Errore Puppeteer:", error);
         res.status(500).json({ error: "Errore durante il controllo disponibilità" });
