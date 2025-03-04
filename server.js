@@ -1,4 +1,4 @@
-const puppeteer = require("puppeteer-core");
+const puppeteer = require("puppeteer");
 const express = require("express");
 const cors = require("cors");
 
@@ -18,7 +18,7 @@ app.get("/checkAvailability", async (req, res) => {
         console.log(`🔍 Controllo disponibilità per: ${apartment} | Check-in: ${checkIn}, Check-out: ${checkOut}`);
 
         const browser = await puppeteer.launch({
-            headless: "new", // Usa il nuovo headless mode
+            headless: true,
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
