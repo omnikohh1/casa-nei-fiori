@@ -2,9 +2,11 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "puppeteer-core": "^21.0.0"
+    "puppeteer-core": "^21.0.0",
+    "puppeteer": "^24.3.1"
   },
   "scripts": {
+    "postinstall": "npx puppeteer browsers install chrome",
     "start": "node server.js"
   }
 }

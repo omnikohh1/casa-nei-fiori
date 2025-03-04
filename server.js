@@ -18,14 +18,13 @@ app.get("/checkAvailability", async (req, res) => {
         console.log(`🔍 Controllo disponibilità per: ${apartment} | Check-in: ${checkIn}, Check-out: ${checkOut}`);
 
         const browser = await puppeteer.launch({
-            headless: true,
+            headless: "new", // Usa il nuovo headless mode
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu"
-            ],
-            executablePath: process.env.CHROME_EXECUTABLE_PATH || "/usr/bin/google-chrome-stable"
+            ]
         });
 
         const page = await browser.newPage();
