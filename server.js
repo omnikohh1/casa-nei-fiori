@@ -5,6 +5,18 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 
+async function getBrowser() {
+    return await puppeteer.launch({
+        headless: "new",
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu"
+        ]
+    });
+}
+
 app.get("/checkAvailability", async (req, res) => {
     const { checkIn, checkOut, apartment } = req.query;
 
@@ -17,16 +29,7 @@ app.get("/checkAvailability", async (req, res) => {
     try {
         console.log(`🔍 Controllo disponibilità per: ${apartment} | Check-in: ${checkIn}, Check-out: ${checkOut}`);
 
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu"
-            ]
-        });
-
+        const browser = await getBrowser();
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: "networkidle2", timeout: 90000 });
 
