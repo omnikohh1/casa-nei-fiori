@@ -17,6 +17,12 @@ async function getBrowser() {
     });
 }
 
+// ✅ Aggiunto handler per la root "/"
+app.get("/", (req, res) => {
+    res.send("✅ Il server è attivo! Usa /checkAvailability per verificare la disponibilità.");
+});
+
+// 🔍 Endpoint per la disponibilità
 app.get("/checkAvailability", async (req, res) => {
     const { checkIn, checkOut, apartment } = req.query;
 
