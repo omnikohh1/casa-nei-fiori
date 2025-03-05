@@ -7,12 +7,15 @@ app.use(cors());
 
 async function getBrowser() {
     return await puppeteer.launch({
+        executablePath: process.env.CHROME_BIN || "/usr/bin/google-chrome-stable",
         headless: "new",
         args: [
             "--no-sandbox",
             "--disable-setuid-sandbox",
             "--disable-dev-shm-usage",
-            "--disable-gpu"
+            "--disable-gpu",
+            "--disable-extensions",
+            "--disable-software-rasterizer"
         ]
     });
 }
