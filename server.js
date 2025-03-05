@@ -1,4 +1,5 @@
 const puppeteer = require("puppeteer");
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 
@@ -8,7 +9,7 @@ app.use(cors());
 async function getBrowser() {
     return await puppeteer.launch({
         headless: "true",
-		executablePath: puppeteer.executablePath(), // Usa Chrome preinstallato
+		executablePath: path.resolve(__dirname, "chrome/chrome-linux64/chrome"),
         args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 }
