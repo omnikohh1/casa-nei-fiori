@@ -8,6 +8,7 @@ app.use(cors());
 async function getBrowser() {
     return await puppeteer.launch({
         headless: "true",
+		executablePath: puppeteer.executablePath(), // Usa Chrome preinstallato
         args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 }
