@@ -5,44 +5,29 @@ const app = express();
 app.use(cors());
 
 async function getBrowser() {
-    try {
-        const browser = await puppeteer.launch({
-            executablePath: '/usr/bin/chromium-browser', // FORZATO
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        });
-        return browser;
-    } catch (error) {
-        console.error("Errore durante l'avvio di Puppeteer:", error);
-        throw error;
-    }
-}
+    let launchOptions = {};
 
-    if (process.env.RENDER) {  // Controlla se l'app è in esecuzione su Render
+    if (process.env.RENDER) {
         launchOptions = {
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser', // Usa variabile d'ambiente, fallback a percorso standard
-            args: ['--no-sandbox', '--disable-setuid-sandbox'], // Opzioni necessarie su Render
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
         };
-    } else {
-        // Configurazioni locali (se necessario, altrimenti lascia vuoto)
-        // launchOptions = { ... };
-    }
+    } // Nessun 'else' necessario se non hai configurazioni locali specifiche
 
     try {
         const browser = await puppeteer.launch(launchOptions);
-        return browser; // Restituisci il browser
+        return browser;
     } catch (error) {
         console.error("Errore durante l'avvio di Puppeteer:", error);
-        throw error; // Rilancia l'errore per gestirlo più in alto
+        throw error; // Rilancia l'errore
     }
 }
 
-// ✅ Aggiunto handler per la root "/"
 app.get("/", (req, res) => {
     res.send("✅ Il server è attivo! Usa /checkAvailability per verificare la disponibilità.");
 });
 
-// 🔍 Endpoint per la disponibilità
-app.get("/checkAvailability", async (req, res) => {
+app.get("/checkAvailability", async (req, res) => { // <-- async è FONDAMENTALE qui
     const { checkIn, checkOut, apartment } = req.query;
 
     if (!checkIn || !checkOut || !apartment) {
@@ -51,15 +36,13 @@ app.get("/checkAvailability", async (req, res) => {
 
     const url = `https://www.casaneifiori.it/risultati-di-ricerca/?mphb_check_in_date=${checkIn}&mphb_check_out_date=${checkOut}&mphb_adults=1&mphb_children=0`;
 
-    let browser; // Dichiara browser qui
+    let browser; // Dichiara browser FUORI dal try
     try {
         console.log(`🔍 Controllo disponibilità per: ${apartment} | Check-in: ${checkIn}, Check-out: ${checkOut}`);
 
-        browser = await getBrowser(); // Ottieni il browser
+        browser = await getBrowser(); // await è corretto perché siamo in una funzione async
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: "networkidle2", timeout: 90000 });
-
-        // await new Promise(resolve => setTimeout(resolve, 5000)); //Non piu' necessario, hai gia' waitUntil
 
         const availableRooms = await page.evaluate(() => {
             const roomElements = document.querySelectorAll(".mphb-room-type-title a");
@@ -73,18 +56,18 @@ app.get("/checkAvailability", async (req, res) => {
         console.log(`✅ Risultato: ${isAvailable ? "DISPONIBILE" : "NON DISPONIBILE"}`);
 
         res.json({ available: isAvailable });
+
     } catch (error) {
         console.error("❌ Errore Puppeteer:", error);
         res.status(500).json({ error: "Errore durante il controllo disponibilità" });
     } finally {
         if (browser) {
-            await browser.close(); //Chiudi il browser *dopo* averlo usato! Mettilo in un finally per essere *sicuro* che venga chiuso
+            await browser.close(); // Chiudi SEMPRE il browser, anche in caso di errore
         }
     }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server in esecuzione su http://localhost:${PORT}`); //Non mettere l'indirizzo locale, se il deploy e' su Render
-    console.log(`🚀 Server in esecuzione sulla porta ${PORT}`); //Usa la variabile PORT
+    console.log(`🚀 Server in esecuzione sulla porta ${PORT}`);
 });
