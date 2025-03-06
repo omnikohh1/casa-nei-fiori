@@ -2,16 +2,31 @@ const puppeteer = require("puppeteer");
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
-
 const app = express();
 app.use(cors());
 
 async function getBrowser() {
-    return await puppeteer.launch({
-        headless: "true",
-		executablePath: path.resolve(__dirname, "chrome/chrome-linux64/chrome"),
-        args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    });
+    const options = {
+        headless: true,
+        args: [
+            "--no-sandbox", 
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-accelerated-2d-canvas",
+            "--no-first-run",
+            "--no-zygote",
+            "--disable-gpu"
+        ]
+ };
+    
+    // Usa il percorso di Chrome basato sulle variabili d'ambiente se disponibile
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        options.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    } else {
+        options.executablePath = path.resolve(__dirname, "chrome/chrome-linux64/chrome");
+    }
+    
+    return await puppeteer.launch(options);
 }
 
 // ✅ Aggiunto handler per la root "/"
