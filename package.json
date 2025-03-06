@@ -4,8 +4,9 @@
     "cors": "^2.8.5",
     "puppeteer": "^24.3.1"
   },
+  {
   "scripts": {
-   "start": "node server.js",
-   "install-chrome": "bash install_chrome.sh"
+    "start": "node server.js",
+    "install-chrome": "bash install_chrome.sh"
   }
 }

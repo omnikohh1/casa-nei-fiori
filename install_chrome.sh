@@ -1,22 +1,17 @@
-#!/usr/bin/env bash
-# exit on error
-set -o errexit
+#!/bin/bash
 
-STORAGE_DIR=/opt/render/project/.render
+echo "➡️  Installing dependencies..."
+apt-get update
+apt-get install -y wget curl unzip gnupg
 
-if [[ ! -d $STORAGE_DIR/chrome ]]; then
-  echo "...Downloading Chrome"
-  mkdir -p $STORAGE_DIR/chrome
-  cd $STORAGE_DIR/chrome
-  wget -P ./ https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-  dpkg -x ./google-chrome-stable_current_amd64.deb $STORAGE_DIR/chrome
-  rm ./google-chrome-stable_current_amd64.deb
-  cd $HOME/project/src # Make sure we return to where we were
-else
-  echo "...Using Chrome from cache"
-fi
+echo "➡️  Adding Google Chrome repository..."
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
 
-# be sure to add Chromes location to the PATH as part of your Start Command
-# export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
+echo "➡️  Updating package list..."
+apt-get update
 
-# add your own build commands...
+echo "➡️  Installing Google Chrome..."
+apt-get install -y google-chrome-stable
+
+echo "✅ Google Chrome installed successfully!"
