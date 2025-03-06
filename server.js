@@ -5,7 +5,17 @@ const app = express();
 app.use(cors());
 
 async function getBrowser() {
-    let launchOptions = {};
+    try {
+        const browser = await puppeteer.launch({
+            executablePath: '/usr/bin/chromium-browser', // FORZATO
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        });
+        return browser;
+    } catch (error) {
+        console.error("Errore durante l'avvio di Puppeteer:", error);
+        throw error;
+    }
+}
 
     if (process.env.RENDER) {  // Controlla se l'app è in esecuzione su Render
         launchOptions = {
