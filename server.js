@@ -8,17 +8,33 @@ async function getBrowser() {
     let launchOptions = {};
 
     if (process.env.RENDER) {
+        console.log("Siamo su Render - Configurazione:");  // LOG
+        console.log("PUPPETEER_EXECUTABLE_PATH:", process.env.PUPPETEER_EXECUTABLE_PATH); // LOG
+
         launchOptions = {
             executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
         };
-    } // Nessun 'else' necessario se non hai configurazioni locali specifiche
+
+        // LOG: Controlla se il file esiste usando fs.promises.stat
+        const fs = require('fs').promises;
+        try {
+            const stats = await fs.stat(launchOptions.executablePath);
+            console.log("Il file esiste:", stats); // LOG
+        } catch (error) {
+            console.error("Errore fs.stat:", error); // LOG - Mostra l'errore specifico
+            // Se il file non esiste, NON interrompere l'esecuzione.
+            // Puppeteer gestirà l'errore più avanti.
+        }
+    } // Nessun 'else' necessario
 
     try {
         const browser = await puppeteer.launch(launchOptions);
         return browser;
     } catch (error) {
         console.error("Errore durante l'avvio di Puppeteer:", error);
+        // LOG AGGIUNTIVO: Stampa launchOptions
+        console.error("Opzioni di lancio:", launchOptions);
         throw error; // Rilancia l'errore
     }
 }
@@ -27,7 +43,7 @@ app.get("/", (req, res) => {
     res.send("✅ Il server è attivo! Usa /checkAvailability per verificare la disponibilità.");
 });
 
-app.get("/checkAvailability", async (req, res) => { // <-- async è FONDAMENTALE qui
+app.get("/checkAvailability", async (req, res) => {
     const { checkIn, checkOut, apartment } = req.query;
 
     if (!checkIn || !checkOut || !apartment) {
@@ -40,7 +56,7 @@ app.get("/checkAvailability", async (req, res) => { // <-- async è FONDAMENTALE
     try {
         console.log(`🔍 Controllo disponibilità per: ${apartment} | Check-in: ${checkIn}, Check-out: ${checkOut}`);
 
-        browser = await getBrowser(); // await è corretto perché siamo in una funzione async
+        browser = await getBrowser();
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: "networkidle2", timeout: 90000 });
 
@@ -62,7 +78,7 @@ app.get("/checkAvailability", async (req, res) => { // <-- async è FONDAMENTALE
         res.status(500).json({ error: "Errore durante il controllo disponibilità" });
     } finally {
         if (browser) {
-            await browser.close(); // Chiudi SEMPRE il browser, anche in caso di errore
+            await browser.close();
         }
     }
 });
