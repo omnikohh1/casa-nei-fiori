@@ -1,32 +1,29 @@
 const puppeteer = require("puppeteer");
-const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const app = express();
 app.use(cors());
 
 async function getBrowser() {
-    const options = {
-        headless: true,
-        args: [
-            "--no-sandbox", 
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-accelerated-2d-canvas",
-            "--no-first-run",
-            "--no-zygote",
-            "--disable-gpu"
-        ]
- };
-    
-    // Usa il percorso di Chrome basato sulle variabili d'ambiente se disponibile
-    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-        options.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    let launchOptions = {};
+
+    if (process.env.RENDER) {  // Controlla se l'app è in esecuzione su Render
+        launchOptions = {
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser', // Usa variabile d'ambiente, fallback a percorso standard
+            args: ['--no-sandbox', '--disable-setuid-sandbox'], // Opzioni necessarie su Render
+        };
     } else {
-        options.executablePath = path.resolve(__dirname, "chrome/chrome-linux64/chrome");
+        // Configurazioni locali (se necessario, altrimenti lascia vuoto)
+        // launchOptions = { ... };
     }
-    
-    return await puppeteer.launch(options);
+
+    try {
+        const browser = await puppeteer.launch(launchOptions);
+        return browser; // Restituisci il browser
+    } catch (error) {
+        console.error("Errore durante l'avvio di Puppeteer:", error);
+        throw error; // Rilancia l'errore per gestirlo più in alto
+    }
 }
 
 // ✅ Aggiunto handler per la root "/"
@@ -44,21 +41,20 @@ app.get("/checkAvailability", async (req, res) => {
 
     const url = `https://www.casaneifiori.it/risultati-di-ricerca/?mphb_check_in_date=${checkIn}&mphb_check_out_date=${checkOut}&mphb_adults=1&mphb_children=0`;
 
+    let browser; // Dichiara browser qui
     try {
         console.log(`🔍 Controllo disponibilità per: ${apartment} | Check-in: ${checkIn}, Check-out: ${checkOut}`);
 
-        const browser = await getBrowser();
+        browser = await getBrowser(); // Ottieni il browser
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: "networkidle2", timeout: 90000 });
 
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        // await new Promise(resolve => setTimeout(resolve, 5000)); //Non piu' necessario, hai gia' waitUntil
 
         const availableRooms = await page.evaluate(() => {
             const roomElements = document.querySelectorAll(".mphb-room-type-title a");
             return Array.from(roomElements).map(el => el.innerText.trim());
         });
-
-        await browser.close();
 
         console.log(`🏨 Strutture disponibili: ${availableRooms.length > 0 ? availableRooms.join(", ") : "Nessuna"}`);
 
@@ -70,10 +66,15 @@ app.get("/checkAvailability", async (req, res) => {
     } catch (error) {
         console.error("❌ Errore Puppeteer:", error);
         res.status(500).json({ error: "Errore durante il controllo disponibilità" });
+    } finally {
+        if (browser) {
+            await browser.close(); //Chiudi il browser *dopo* averlo usato! Mettilo in un finally per essere *sicuro* che venga chiuso
+        }
     }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server in esecuzione su http://localhost:${PORT}`);
+    console.log(`🚀 Server in esecuzione su http://localhost:${PORT}`); //Non mettere l'indirizzo locale, se il deploy e' su Render
+    console.log(`🚀 Server in esecuzione sulla porta ${PORT}`); //Usa la variabile PORT
 });
