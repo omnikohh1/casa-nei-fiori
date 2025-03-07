@@ -9,10 +9,10 @@ async function getBrowser() {
 
     if (process.env.RENDER) {
         console.log("Siamo su Render - Configurazione:");  // LOG
-        console.log("executablePath:", require('puppeteer').executablePath()); // LOG - Percorso trovato da Puppeteer
+        console.log("executablePath:", require('puppeteer-core').executablePath()); // LOG - Percorso trovato da Puppeteer
 
         launchOptions = {
-            executablePath: require('puppeteer').executablePath(), // Usa il percorso di Puppeteer
+            executablePath: require('puppeteer-core').executablePath(), // Usa il percorso di Puppeteer
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
         };
 
