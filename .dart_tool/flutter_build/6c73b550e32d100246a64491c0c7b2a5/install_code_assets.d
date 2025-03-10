@@ -1,0 +1,1 @@
+ C:\\Users\\Administrator\\casa_nei_fiori\\.dart_tool\\flutter_build\\6c73b550e32d100246a64491c0c7b2a5\\native_assets.json: 
